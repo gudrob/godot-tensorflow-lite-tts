@@ -1,2 +1,8 @@
 # Godot 4+ specific ignores
 .godot/
+
+.vs/
+
+*csproj.old*
+
+*.DS_Store

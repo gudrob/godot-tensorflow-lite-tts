@@ -9,11 +9,19 @@ namespace GodotTTS.Speech.TTS.Demo
         [Export]
         public TextToSpeech textToSpeech;
 
+        public bool enterKeyPressed = false;
+
         public override void _Process(double delta)
         {
-            if (Input.IsKeyPressed(Key.Enter))
+            if (!enterKeyPressed && Input.IsKeyPressed(Key.Enter))
             {
+                enterKeyPressed = true;
                 textToSpeech.Speak(inputField.Text);
+            }
+
+            if (!Input.IsKeyPressed(Key.Enter))
+            {
+                enterKeyPressed = false;
             }
         }
 

@@ -111,11 +111,10 @@ namespace TensorFlowLite
 
         public void SetInputTensorData(int inputTensorIndex, Array inputTensorData)
         {
-            if (!inputDataHandles.TryGetValue(inputTensorIndex, out GCHandle tensorDataHandle))
-            {
-                tensorDataHandle = GCHandle.Alloc(inputTensorData, GCHandleType.Pinned);
-                inputDataHandles.Add(inputTensorIndex, tensorDataHandle);
-            }
+            
+            GCHandle tensorDataHandle = GCHandle.Alloc(inputTensorData, GCHandleType.Pinned);
+            inputDataHandles[inputTensorIndex] = tensorDataHandle;
+            
             IntPtr tensorDataPtr = tensorDataHandle.AddrOfPinnedObject();
             TfLiteTensor tensor = TfLiteInterpreterGetInputTensor(interpreter, inputTensorIndex);
             ThrowIfError(TfLiteTensorCopyFromBuffer(tensor, tensorDataPtr, Buffer.ByteLength(inputTensorData)));
@@ -142,11 +141,9 @@ namespace TensorFlowLite
 
         public void GetOutputTensorData(int outputTensorIndex, Array outputTensorData)
         {
-            if (!outputDataHandles.TryGetValue(outputTensorIndex, out GCHandle tensorDataHandle))
-            {
-                tensorDataHandle = GCHandle.Alloc(outputTensorData, GCHandleType.Pinned);
-                outputDataHandles.Add(outputTensorIndex, tensorDataHandle);
-            }
+            var tensorDataHandle = GCHandle.Alloc(outputTensorData, GCHandleType.Pinned);
+            outputDataHandles[outputTensorIndex] = tensorDataHandle;
+            
             IntPtr tensorDataPtr = tensorDataHandle.AddrOfPinnedObject();
             TfLiteTensor tensor = TfLiteInterpreterGetOutputTensor(interpreter, outputTensorIndex);
             ThrowIfError(TfLiteTensorCopyToBuffer(tensor, tensorDataPtr, Buffer.ByteLength(outputTensorData)));

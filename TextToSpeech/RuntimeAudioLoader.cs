@@ -5,15 +5,15 @@ public class RuntimeAudioLoader
 {
     public static AudioStreamWav Transform(byte[] bytes)
     {
-        var newStream = new AudioStreamWav();
-
-        newStream.Data = ConvertTo16Bit(bytes);
-
-        int sampleNum = newStream.Data.Length / 4;
-        newStream.Stereo = false;
-        newStream.LoopEnd = sampleNum;
+        var newStream = new AudioStreamWav
+        {
+            Data = ConvertTo16Bit(bytes)
+,
+            Stereo = false
+        };
+        newStream.LoopEnd = newStream.Data.Length / 2;
         newStream.MixRate = 22050;
-        newStream.LoopMode = AudioStreamWav.LoopModeEnum.Forward;
+        newStream.LoopMode = AudioStreamWav.LoopModeEnum.Disabled;
         newStream.Format = AudioStreamWav.FormatEnum.Format16Bits;
 
         return newStream;

@@ -35,10 +35,7 @@ namespace GodotTTS.Speech.TTS
         public AudioStreamPlayer audioSource;
 
         private int sampleLength;
-        private byte[] _audioSample;
-        private AudioStreamWav _audioClip;
         private Thread _speakThread;
-        private bool _playAudio = false;
 
         [Export]
         public string fastspeech;
@@ -150,6 +147,7 @@ namespace GodotTTS.Speech.TTS
             int[] outputShape = _fastspeechInterpreter.GetOutputTensorInfo(1).shape;
             float[,,] outputData = new float[outputShape[0], outputShape[1], outputShape[2]];
             _fastspeechInterpreter.GetOutputTensorData(1, outputData);
+            _fastspeechInterpreter.ResetVariableTensors();
             return outputData;
         }
 
@@ -182,22 +180,6 @@ namespace GodotTTS.Speech.TTS
             InitTTSInference();
         }
 
-        public override void _Process(double delta)
-        {
-            if (_playAudio)
-            {
-                audioSource.Stream = RuntimeAudioLoader.Transform(_audioSample);
-                audioSource.Play();
-                _playAudio = false;
-            }
-        }
-
-        void OnDestroy()
-        {
-            _speakThread?.Join();
-            Dispose();
-        }
-
         public void Speak(string text)
         {
             _speakThread?.Join();
@@ -207,18 +189,33 @@ namespace GodotTTS.Speech.TTS
 
         private void SpeakTask(object inputText)
         {
-            string text = inputText as string;
-            CleanText(ref text);
-            int[] inputIDs = TextToSequence(text);
-            float[,,] fastspeechOutput = FastspeechInference(ref inputIDs);
-            float[,,] melganOutput = MelganInference(ref fastspeechOutput);
+            try
+            {
 
-            sampleLength = melganOutput.GetLength(1);
-            var data = new float[sampleLength];
-            for (int s = 0; s < sampleLength; s++) data[s] = melganOutput[0, s, 0];
-            _audioSample = new byte[data.Length * 4];
-            Buffer.BlockCopy(data, 0, _audioSample, 0, _audioSample.Length);
-            _playAudio = true;
+                string text = inputText as string;
+                CleanText(ref text);
+                int[] inputIDs = TextToSequence(text);
+                GD.Print("Converted Text to sequence");
+                float[,,] fastspeechOutput = FastspeechInference(ref inputIDs);
+                GD.Print("Processed FastspeechInference");
+                float[,,] melganOutput = MelganInference(ref fastspeechOutput);
+                GD.Print("Processed MelganInference");
+
+                sampleLength = melganOutput.GetLength(1);
+
+                GD.Print("Sample length: "+sampleLength);
+
+                var data = new float[sampleLength];
+                for (int s = 0; s < sampleLength; s++) data[s] = melganOutput[0, s, 0];
+                var _audioSample = new byte[data.Length * 4];
+                Buffer.BlockCopy(data, 0, _audioSample, 0, _audioSample.Length);
+                audioSource.SetDeferred(AudioStreamPlayer.PropertyName.Stream, RuntimeAudioLoader.Transform(_audioSample));
+                audioSource.CallDeferred(AudioStreamPlayer.MethodName.Play);
+            }
+            catch (Exception ex)
+            {
+                GD.Print(ex);
+            }
         }
 
         public void CleanText(ref string text)
