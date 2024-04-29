@@ -1,0 +1,25 @@
+[gd_scene load_steps=3 format=3 uid="uid://bgcbqtfyvuwh8"]
+
+[ext_resource type="Script" path="res://TextToSpeech/TextToSpeech.cs" id="1_jdg6x"]
+[ext_resource type="Script" path="res://TextToSpeech/TTSDemo.cs" id="2_3aj8h"]
+
+[node name="tts" type="Node" node_paths=PackedStringArray("audioSource")]
+script = ExtResource("1_jdg6x")
+audioSource = NodePath("audio_player")
+fastspeech = "./Models/fastspeech_quant.tflite"
+melgan = "./Models/melgan_quant.tflite"
+mapperIdToSymbol = "./Mapper/id_to_symbol.txt"
+mapperSymbolToId = "./Mapper/symbol_to_id.txt"
+
+[node name="demo" type="Node" parent="." node_paths=PackedStringArray("inputField", "textToSpeech")]
+script = ExtResource("2_3aj8h")
+inputField = NodePath("../LineEdit")
+textToSpeech = NodePath("..")
+
+[node name="LineEdit" type="LineEdit" parent="."]
+offset_left = 17.0
+offset_top = 17.0
+offset_right = 524.0
+offset_bottom = 222.0
+
+[node name="audio_player" type="AudioStreamPlayer" parent="."]
